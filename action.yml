@@ -15,6 +15,14 @@ inputs:
     description: 'Path to a rules file, relative to the repo. Defaults to knoten.php / .knoten.php in the project.'
     required: false
     default: ''
+  comment:
+    description: 'Post the result as a sticky pull-request comment. Set to "false" to disable.'
+    required: false
+    default: 'true'
+  github-token:
+    description: 'Token used to post the PR comment. Defaults to the workflow token; the job needs `pull-requests: write` for it to work.'
+    required: false
+    default: ${{ github.token }}
 
 runs:
   using: 'docker'

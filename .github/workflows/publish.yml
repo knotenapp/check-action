@@ -13,11 +13,19 @@ name: publish
 # Which Knoten app build gets bundled is controlled by the `KNOTEN_REF` repo
 # variable (Settings → Secrets and variables → Actions → Variables). Set it to a
 # released app tag that contains `knoten:check`; it defaults to `main`.
+#
+# NOTE: automatic build-on-tag is disabled for now. The Knoten app hasn't cut a
+# release containing `knoten:check` (it's still on the `bounderies` branch), so a
+# build from the default `main` ref would produce a broken image and overwrite
+# the working one published by hand. To re-enable once the app is released:
+#   1. Set the `KNOTEN_REF` repo variable to that release tag.
+#   2. Uncomment the `push:` trigger below.
+#   3. Cut releases by pushing tags like `v1.0.1`.
 
 on:
-  push:
-    tags:
-      - 'v*'
+  # push:
+  #   tags:
+  #     - 'v*'
   workflow_dispatch:
 
 permissions:

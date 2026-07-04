@@ -3,8 +3,8 @@
 Fail a build when a Laravel architecture rule declared in `knoten.php` is
 violated. Wraps [Knoten](https://github.com/Williamug/knoten)'s `knoten:check`
 gate in a prebuilt Docker image, so no PHP/Composer setup is needed in the
-consuming workflow. Violations are reported as inline annotations on the PR diff
-and fail the job.
+consuming workflow. Violations are reported as inline annotations on the PR diff,
+summarised in a single sticky PR comment, and fail the job.
 
 ## Usage
 
@@ -18,6 +18,7 @@ on:
 
 permissions:
   contents: read
+  pull-requests: write # required for the sticky PR comment
 
 jobs:
   knoten-check:
@@ -28,14 +29,22 @@ jobs:
         # with:
         #   path: .            # project to check, relative to the repo root
         #   config: knoten.php # rules file; default: auto-discover knoten.php
+        #   comment: 'false'   # disable the PR comment (annotations still fire)
 ```
+
+The result is posted as a single **sticky comment** on the pull request — it is
+updated in place on each run, and flips to a green all-clear once the violations
+are resolved. This needs `pull-requests: write`; without it (or on `push`
+events) the action still runs and annotates, it just skips the comment.
 
 ## Inputs
 
-| Input    | Default        | Description                                                        |
-| -------- | -------------- | ------------------------------------------------------------------ |
-| `path`   | `.`            | Path to the project to check, relative to the repo root.           |
-| `config` | *auto-discover* | Rules file relative to the repo. Defaults to `knoten.php` / `.knoten.php` in the project. |
+| Input          | Default            | Description                                                        |
+| -------------- | ------------------ | ------------------------------------------------------------------ |
+| `path`         | `.`                | Path to the project to check, relative to the repo root.           |
+| `config`       | *auto-discover*    | Rules file relative to the repo. Defaults to `knoten.php` / `.knoten.php` in the project. |
+| `comment`      | `true`             | Post the result as a sticky PR comment. Set `false` to disable.    |
+| `github-token` | `${{ github.token }}` | Token used to post the comment. The job needs `pull-requests: write`. |
 
 ## Rules file
 

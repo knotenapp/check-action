@@ -1,0 +1,4 @@
+# The build context is just this action repo (the app is cloned inside the
+# Dockerfile). Only the docker/ overlay needs to reach the build.
+.git
+README.md

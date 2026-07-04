@@ -1,0 +1,27 @@
+name: 'Knoten architecture check'
+description: 'Fail the build when a Laravel architecture rule in knoten.php is violated.'
+author: 'William Asaba'
+
+branding:
+  icon: 'git-branch'
+  color: 'red'
+
+inputs:
+  path:
+    description: 'Path to the project to check, relative to the repo root.'
+    required: false
+    default: '.'
+  config:
+    description: 'Path to a rules file, relative to the repo. Defaults to knoten.php / .knoten.php in the project.'
+    required: false
+    default: ''
+
+runs:
+  using: 'docker'
+  # Prebuilt image published by .github/workflows/publish.yml on each release
+  # tag, so consumers pull it instead of rebuilding on every CI run. The `:v1`
+  # tag moves with the latest v1.x release; pin `@v1.2.3` for an exact one.
+  image: 'docker://ghcr.io/knotenapp/check-action:v1'
+  args:
+    - ${{ inputs.path }}
+    - ${{ inputs.config }}

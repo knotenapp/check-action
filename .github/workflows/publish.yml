@@ -1,0 +1,76 @@
+name: publish
+
+# Build the Knoten architecture-gate image and push it to GHCR so
+# `uses: knotenapp/check-action@v1` pulls a prebuilt image instead of rebuilding
+# on every consumer's CI run.
+#
+#   * Push a tag like `v1.2.3` to build AND publish `ghcr.io/knotenapp/check-action`
+#     tagged `v1`, `v1.2`, `v1.2.3`, and the commit SHA. The moving `v1` tag is
+#     what `action.yml` (and most consumers) reference.
+#   * Run manually (workflow_dispatch) to build without pushing — a smoke test
+#     that the Dockerfile still builds.
+#
+# Which Knoten app build gets bundled is controlled by the `KNOTEN_REF` repo
+# variable (Settings → Secrets and variables → Actions → Variables). Set it to a
+# released app tag that contains `knoten:check`; it defaults to `main`.
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  IMAGE: ghcr.io/knotenapp/check-action
+
+jobs:
+  publish:
+    name: build and push image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        # Skipped on manual runs so a workflow_dispatch stays a build-only smoke
+        # test that needs no registry credentials.
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Derive image tags
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE }}
+          # `v1` / `v1.2` move with each release; `v1.2.3` and the SHA are exact.
+          tags: |
+            type=semver,pattern=v{{major}}
+            type=semver,pattern=v{{major}}.{{minor}}
+            type=semver,pattern=v{{version}}
+            type=sha,format=long
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          # Only push on a tag; a manual run just proves the build.
+          push: ${{ startsWith(github.ref, 'refs/tags/') }}
+          build-args: |
+            KNOTEN_REF=${{ vars.KNOTEN_REF || 'main' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

@@ -26,11 +26,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: knotenapp/check-action@v1
-        # with:
-        #   path: .            # project to check, relative to the repo root
-        #   config: knoten.php # rules file; default: auto-discover knoten.php
-        #   comment: 'false'   # disable the PR comment (annotations still fire)
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }} # required for the PR comment
+          # path: .            # project to check, relative to the repo root
+          # config: knoten.php # rules file; default: auto-discover knoten.php
+          # comment: 'false'   # disable the PR comment (annotations still fire)
 ```
+
+> Pass `github-token` explicitly as shown — relying on the input's
+> `${{ github.token }}` default does not reliably reach the container in a Docker
+> action, so the comment step silently skips.
 
 The result is posted as a single **sticky comment** on the pull request — it is
 updated in place on each run, and flips to a green all-clear once the violations

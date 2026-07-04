@@ -30,6 +30,13 @@ runs:
   # tag, so consumers pull it instead of rebuilding on every CI run. The `:v1`
   # tag moves with the latest v1.x release; pin `@v1.2.3` for an exact one.
   image: 'docker://ghcr.io/knotenapp/check-action:v1'
+  # Remap inputs to valid-identifier env vars. GitHub exposes `github-token` as
+  # INPUT_GITHUB-TOKEN (the hyphen is kept), which the container's /bin/sh (dash)
+  # drops because it isn't a valid shell variable name — so the entrypoint's php
+  # never sees it. Passing it under a clean name avoids that.
+  env:
+    KNOTEN_GITHUB_TOKEN: ${{ inputs.github-token }}
+    KNOTEN_COMMENT: ${{ inputs.comment }}
   args:
     - ${{ inputs.path }}
     - ${{ inputs.config }}

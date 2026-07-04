@@ -91,12 +91,14 @@ knoten_post_pr_comment($violations, $relative);
  */
 function knoten_post_pr_comment(array $violations, callable $relative): void
 {
-    $flag = strtolower(trim((string) getenv('INPUT_COMMENT')));
+    // KNOTEN_* are set from action.yml's `runs.env` (valid names that survive the
+    // dash entrypoint). The INPUT_* forms are fallbacks for a direct docker run.
+    $flag = strtolower(trim((string) (getenv('KNOTEN_COMMENT') ?: getenv('INPUT_COMMENT'))));
     if (in_array($flag, ['false', '0', 'no', 'off'], true)) {
         return;
     }
 
-    $token = (string) getenv('INPUT_GITHUB_TOKEN');
+    $token = (string) (getenv('KNOTEN_GITHUB_TOKEN') ?: getenv('INPUT_GITHUB-TOKEN') ?: getenv('INPUT_GITHUB_TOKEN'));
     if ($token === '') {
         return;
     }
